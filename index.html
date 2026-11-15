@@ -250,6 +250,7 @@ ul{list-style:none}
 .spot-msg.xl{font-size:clamp(1.7rem,6vw,2.4rem)} .spot-msg.lg{font-size:clamp(1.25rem,4.4vw,1.6rem)} .spot-msg.md{font-size:1.05rem;font-weight:500;line-height:1.55}
 .spot-name{font-weight:800;font-size:1.1rem;color:var(--green)}
 .spot-unit{color:var(--muted);font-size:.9rem;min-height:1em}
+.spot-unit .nb{display:inline-block}
 .spot-card footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding-top:16px;border-top:1.5px solid var(--line);font-size:.78rem;color:var(--muted);text-align:right}
 .spot-card footer img{width:150px}
 .spot-card footer span{min-width:0}
@@ -580,7 +581,7 @@ window.INVITE_CONFIG = {
       items.forEach(function (n) {
         var li = document.createElement("li"); li.textContent = n; li.setAttribute("role", "option");
         // pointerdown chạy trước khi ô nhập mất tiêu điểm
-        li.addEventListener("pointerdown", function (e) { e.preventDefault(); input.value = n; hide(); input.dispatchEvent(new Event("input", { bubbles: true })); });
+        li.addEventListener("pointerdown", function (e) { e.preventDefault(); input.value = n; input.dispatchEvent(new Event("input", { bubbles: true })); hide(); });
         box.appendChild(li);
       });
       box.hidden = !items.length; input.setAttribute("aria-expanded", String(!box.hidden));
@@ -807,7 +808,11 @@ window.INVITE_CONFIG = {
     if (!view.length) return;
     cur = (i + view.length) % view.length; var p = view[cur], card = $("spotCard");
     $("spotRole").textContent = p.role; $("spotMsg").textContent = p.message;
-    $("spotName").textContent = p.name; $("spotUnit").textContent = [p.major, p.unit, p.workplace].filter(Boolean).join(" · ");
+    $("spotName").textContent = p.name; var su = $("spotUnit"); su.textContent = "";
+    [p.major, p.unit, p.workplace].filter(Boolean).forEach(function (t, k) {   // mỗi phần không bị ngắt giữa chừng
+      if (k) su.appendChild(document.createTextNode(" · "));
+      su.appendChild(el("span", "nb", t));
+    });
     card.style.setProperty("--c", p.color);
     $("spotMsg").className = "spot-msg " + (p.message.length < 60 ? "xl" : p.message.length < 180 ? "lg" : "md");
     spot.hidden = false; card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
