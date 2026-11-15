@@ -145,9 +145,17 @@ ul{list-style:none}
 /* ---------- Biểu mẫu ---------- */
 .form{display:grid;gap:16px}
 .form label,.form legend{font-weight:600;font-size:.92rem;color:var(--ink)}
+.form label small{font-weight:400;color:var(--muted)}
 .form label i{color:#c0392b;font-style:normal}
 .form input[type=text],.form select,.form textarea{display:block;width:100%;margin-top:6px;padding:12px 14px;border:1.5px solid #c9d9e4;border-radius:14px;font:400 1rem var(--font);color:var(--ink);background:#fff}
 .form textarea{resize:vertical}
+.combo{position:relative;display:block}
+.combo input{padding-right:40px!important}
+.combo-caret{position:absolute;right:14px;top:50%;transform:translateY(-35%);color:var(--muted);pointer-events:none;font-size:1rem}
+.combo-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border:1.5px solid #c9d9e4;border-radius:14px;box-shadow:0 14px 30px rgba(29,79,140,.16);padding:6px;max-height:360px;overflow:auto}
+.combo-list[hidden]{display:none}
+.combo-list li{padding:11px 12px;border-radius:10px;font-weight:500;cursor:pointer}
+.combo-list li:hover{background:#eef7f1;color:var(--green)}
 .form fieldset{border:0;display:grid;gap:8px}
 .form legend{margin-bottom:8px}
 .choice{display:flex;align-items:center;gap:10px;border:1.5px solid #c9d9e4;border-radius:14px;padding:11px 14px;cursor:pointer;font-weight:500!important}
@@ -387,18 +395,25 @@ ul{list-style:none}
         <label>Họ và tên <i>*</i>
           <input name="name" type="text" maxlength="80" autocomplete="name" required>
         </label>
-        <label>Quý vị là
-          <select name="role">
-            <option value="">— Xin chọn (không bắt buộc) —</option>
-            <option>Thầy Cô đang công tác tại Khoa</option>
-            <option>Thầy Cô nguyên là cán bộ, giảng viên của Khoa</option>
-            <option>Cựu người học</option>
-            <option>Người học đang theo học</option>
-            <option>Khách mời</option>
-          </select>
+        <label class="combo-label">Quý vị là
+          <span class="combo">
+            <input name="role" id="roleInput" type="text" maxlength="60" autocomplete="off" placeholder="Chọn hoặc nhập" role="combobox" aria-expanded="false" aria-controls="roleList" aria-autocomplete="list">
+            <span class="combo-caret" aria-hidden="true">▾</span>
+            <ul class="combo-list" id="roleList" role="listbox" hidden></ul>
+          </span>
         </label>
-        <label>Khóa học / Đơn vị công tác
+        <label class="combo-label">Ngành
+          <span class="combo" id="majorCombo">
+            <input name="major" id="majorInput" type="text" maxlength="60" autocomplete="off" placeholder="Chọn hoặc nhập tên ngành" role="combobox" aria-expanded="false" aria-controls="majorList" aria-autocomplete="list">
+            <span class="combo-caret" aria-hidden="true">▾</span>
+            <ul class="combo-list" id="majorList" role="listbox" hidden></ul>
+          </span>
+        </label>
+        <label>Khóa học
           <input name="unit" type="text" maxlength="60" placeholder="Ví dụ: Khóa 2013–2017">
+        </label>
+        <label id="workplaceWrap" hidden>Đơn vị công tác hiện tại
+          <input name="workplace" type="text" maxlength="80" autocomplete="organization" placeholder="Không bắt buộc">
         </label>
         <label>Lời chúc
           <textarea name="message" rows="4" maxlength="600" placeholder="Viết lời chúc của bạn tại đây…"></textarea>
@@ -555,6 +570,32 @@ window.INVITE_CONFIG = {
   }
 
   /* ---------- Hiện dần khi cuộn ---------- */
+  /* ---------- Ô chọn-hoặc-gõ (Quý vị là, Ngành): chọn trong danh sách hoặc gõ nội dung khác ---------- */
+  function combo(input, box, NAMES) {
+    var plain = function (t) { return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d"); };
+    function show(filter) {
+      var q = filter ? plain(input.value.trim()) : "";
+      var items = NAMES.filter(function (n) { return !q || plain(n).indexOf(q) >= 0; });
+      box.textContent = "";
+      items.forEach(function (n) {
+        var li = document.createElement("li"); li.textContent = n; li.setAttribute("role", "option");
+        // pointerdown chạy trước khi ô nhập mất tiêu điểm
+        li.addEventListener("pointerdown", function (e) { e.preventDefault(); input.value = n; hide(); input.dispatchEvent(new Event("input", { bubbles: true })); });
+        box.appendChild(li);
+      });
+      box.hidden = !items.length; input.setAttribute("aria-expanded", String(!box.hidden));
+    }
+    function hide() { box.hidden = true; input.setAttribute("aria-expanded", "false"); }
+    input.addEventListener("focus", function () { show(false); });
+    input.addEventListener("click", function () { if (box.hidden) show(false); });
+    input.addEventListener("input", function () { show(true); });
+    input.addEventListener("blur", hide);
+    input.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
+  }
+  var ROLE_NAMES = ["Thầy Cô đang công tác tại Khoa", "Thầy Cô nguyên là cán bộ, giảng viên của Khoa", "Sinh viên", "Học viên sau đại học", "Cựu người học", "Khách mời"];
+  combo($("roleInput"), $("roleList"), ROLE_NAMES);
+  combo($("majorInput"), $("majorList"), ["Khoa học thư viện", "Lưu trữ học", "Quản lý thông tin", "Quản trị văn phòng", "Thông tin học", "Thông tin - Thư viện"]);
+
   var reveals = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && !reduced) {
     var io = new IntersectionObserver(function (es) {
@@ -625,6 +666,9 @@ window.INVITE_CONFIG = {
   var online = !!C.scriptUrl;
   $("demoNote").hidden = online;
 
+  // Ô "Đơn vị công tác hiện tại" chỉ hiện khi người gửi là cựu người học
+  var isAlumni = function () { return form.role.value.trim().toLowerCase() === "cựu người học"; };
+  form.addEventListener("input", function () { $("workplaceWrap").hidden = !isAlumni(); });
   form.addEventListener("change", function () {
     $("guestsWrap").hidden = form.attend.value !== "Có";
   });
@@ -633,7 +677,8 @@ window.INVITE_CONFIG = {
   function wishNode(w, tag) {
     var li = document.createElement(tag), who = document.createElement("p"), tx = document.createElement("p");
     who.className = "who"; who.textContent = w.name || "Ẩn danh";
-    if (w.unit) { var sm = document.createElement("small"); sm.textContent = " · " + w.unit; who.appendChild(sm); }
+    var extra = [String(w.unit || "").replace(/\s*[–-]\s*$/, ""), w.major, w.workplace].filter(Boolean).join(" · ");
+    if (extra) { var sm = document.createElement("small"); sm.textContent = " · " + extra; who.appendChild(sm); }
     tx.className = "msg"; tx.textContent = w.message;
     li.appendChild(tx); li.appendChild(who);
     return li;
@@ -676,16 +721,23 @@ window.INVITE_CONFIG = {
   var ROLES = [
     ["Thầy Cô đang công tác tại Khoa", "Thầy Cô đang công tác", "#8dc63f"],
     ["Thầy Cô nguyên là cán bộ, giảng viên của Khoa", "Thầy Cô nguyên cán bộ", "#f6c945"],
+    ["Sinh viên", "Sinh viên", "#f79ab5"],
+    ["Học viên sau đại học", "Học viên sau đại học", "#ffa35c"],
     ["Cựu người học", "Cựu người học", "#56c7e8"],
-    ["Người học đang theo học", "Người học", "#f79ab5"],
+    ["Người học đang theo học", "Người học", "#fbc4d3"],   // tên cũ, giữ để nhận các lời chúc đã gửi trước đó
     ["Khách mời", "Khách mời", "#c3b1ff"]
   ];
   var OTHER = ["", "Bạn bè gần xa", "#ffffff"];
+  var MAJORS = ["Khoa học thư viện", "Lưu trữ học", "Quản lý thông tin", "Quản trị văn phòng", "Thông tin học", "Thông tin - Thư viện"];
+  var MAJORS_LC = MAJORS.map(function (n) { return n.toLowerCase(); });
   var wallEl = $("wall"), spot = $("spot"), parsed = [], view = [], cur = 0, filter = null, playT = null;
   function parse(w) {
     var u = String(w.unit || ""), r = OTHER, unit = u;
-    ROLES.some(function (x) { if (u.indexOf(x[0]) === 0) { r = x; unit = u.slice(x[0].length).replace(/^\s*[–-]\s*/, ""); return true; } });
-    return { name: w.name || "Ẩn danh", message: String(w.message), role: r[1], color: r[2], unit: unit.trim() };
+    var known = ROLES.some(function (x) { if (u === x[0] || u.indexOf(x[0] + " –") === 0 || u.indexOf(x[0] + " -") === 0) { r = x; unit = u.slice(x[0].length).replace(/^\s*[–-]\s*/, ""); return true; } });
+    // Đối tượng tự nhập được lưu dạng "đối tượng – khóa/đơn vị": hiện đúng chữ đã nhập, gộp vào nhóm "Khác" khi thống kê
+    var cut = u.indexOf(" –");
+    if (!known && cut > 0) { r = [u.slice(0, cut).trim(), u.slice(0, cut).trim(), "#ffffff", "Khác"]; unit = u.slice(cut + 2); }
+    return { name: w.name || "Ẩn danh", message: String(w.message), role: r[1], group: r[3] || r[1], color: r[2], unit: unit.trim(), major: String(w.major || "").trim(), workplace: String(w.workplace || "").trim() };
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function countUp(node, n) {
@@ -695,20 +747,24 @@ window.INVITE_CONFIG = {
   }
   function buildWall() {
     parsed = all.map(parse);
-    var units = {}, roles = {};
+    var units = {}, roles = {}, majors = {};
     parsed.forEach(function (p) {
-      roles[p.role] = (roles[p.role] || 0) + 1;
+      roles[p.group] = (roles[p.group] || 0) + 1;
       if (p.unit) { var k = p.unit.toLowerCase(); (units[k] = units[k] || { label: p.unit, n: 0 }).n++; }
+      if (p.major) { var m = p.major.toLowerCase(); (majors[m] = majors[m] || { label: p.major, n: 0 }).n++; }
     });
     var unitList = Object.keys(units).map(function (k) { return units[k]; }).sort(function (a, b) { return b.n - a.n; });
     // Số liệu tổng hợp
     var stats = $("wallStats"); stats.textContent = "";
-    [[parsed.length, "lời chúc đã gửi"], [unitList.length, "khóa học & đơn vị"]]
+    // Ngành: 6 ngành của Khoa theo thứ tự cố định, ngành tự nhập xếp sau
+    var majorList = MAJORS.map(function (n) { return majors[n.toLowerCase()]; }).filter(Boolean)
+      .concat(Object.keys(majors).filter(function (k) { return MAJORS_LC.indexOf(k) < 0; }).map(function (k) { return majors[k]; }).sort(function (a, b) { return b.n - a.n; }));
+    [[parsed.length, "lời chúc đã gửi"], [majorList.length, "ngành"], [unitList.length, "khóa học & đơn vị"]]
       .concat(meta.attending ? [[meta.attending, "người sẽ về họp mặt"]] : [])
       .forEach(function (s) { var d = el("div", "stat"), b = el("b"); countUp(b, s[0]); d.appendChild(b); d.appendChild(el("span", "", s[1])); stats.appendChild(d); });
     // Thanh tỉ lệ theo nhóm người gửi
     var bar = $("wallBar"), lg = $("wallLegend"); bar.textContent = ""; lg.textContent = "";
-    ROLES.concat([OTHER]).forEach(function (r) {
+    ROLES.concat([OTHER, ["", "Khác", "#ffffff"]]).forEach(function (r) {
       var n = roles[r[1]]; if (!n) return;
       var seg = el("i"); seg.style.cssText = "flex:" + n + ";background:" + r[2]; bar.appendChild(seg);
       var li = el("li"), dot = el("i"); dot.style.background = r[2];
@@ -721,9 +777,10 @@ window.INVITE_CONFIG = {
       b.appendChild(el("span", "", n)); b.addEventListener("click", function () { filter = f; buildWall(); }); chips.appendChild(b);
     }
     chip("Tất cả", parsed.length, null);
-    unitList.slice(0, 14).forEach(function (u) { chip(u.label, u.n, u.label.toLowerCase()); });
+    majorList.forEach(function (u) { chip(u.label, u.n, "m:" + u.label.toLowerCase()); });
+    unitList.slice(0, 14).forEach(function (u) { chip(u.label, u.n, "u:" + u.label.toLowerCase()); });
     // Lưới lời chúc
-    view = parsed.filter(function (p) { return !filter || p.unit.toLowerCase() === filter; });
+    view = parsed.filter(function (p) { return !filter || (filter.charAt(0) === "m" ? p.major : p.unit).toLowerCase() === filter.slice(2); });
     var grid = $("wallGrid"); grid.textContent = "";
     view.forEach(function (p, i) {
       var len = p.message.length;
@@ -732,7 +789,7 @@ window.INVITE_CONFIG = {
       c.appendChild(el("span", "wq", "“"));
       c.appendChild(el("span", "wmsg", p.message));
       c.appendChild(el("span", "wname", p.name));
-      c.appendChild(el("span", "wunit", [p.role, p.unit].filter(Boolean).join(" · ")));
+      c.appendChild(el("span", "wunit", [p.role, p.major, p.unit, p.workplace].filter(Boolean).join(" · ")));
       c.addEventListener("click", function () { openSpot(i); });
       grid.appendChild(c);
     });
@@ -750,7 +807,7 @@ window.INVITE_CONFIG = {
     if (!view.length) return;
     cur = (i + view.length) % view.length; var p = view[cur], card = $("spotCard");
     $("spotRole").textContent = p.role; $("spotMsg").textContent = p.message;
-    $("spotName").textContent = p.name; $("spotUnit").textContent = p.unit;
+    $("spotName").textContent = p.name; $("spotUnit").textContent = [p.major, p.unit, p.workplace].filter(Boolean).join(" · ");
     card.style.setProperty("--c", p.color);
     $("spotMsg").className = "spot-msg " + (p.message.length < 60 ? "xl" : p.message.length < 180 ? "lg" : "md");
     spot.hidden = false; card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
@@ -775,6 +832,12 @@ window.INVITE_CONFIG = {
   });
   var wantWall = location.hash === "#luu-but" || location.hash === "#tuong";
 
+  // Ghép "đối tượng – khóa/đơn vị" vào một cột; đối tượng tự nhập luôn kèm dấu "–" để phân biệt với khóa/đơn vị
+  function joinUnit(role, unit) {
+    if (!role) return unit;
+    if (unit) return role + " – " + unit;
+    return ROLE_NAMES.indexOf(role) >= 0 ? role : role + " –";
+  }
   function localWishes() { try { return JSON.parse(localStorage.getItem(LS)) || []; } catch (e) { return []; } }
   function load() {
     if (!online) return render(localWishes());
@@ -787,7 +850,8 @@ window.INVITE_CONFIG = {
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var data = {
-      name: form.name.value.trim(), unit: [form.role.value, form.unit.value.trim()].filter(Boolean).join(" – "), attend: form.attend.value,
+      name: form.name.value.trim(), unit: joinUnit(form.role.value.trim(), form.unit.value.trim()), attend: form.attend.value,
+      major: form.major.value.trim(), workplace: isAlumni() ? form.workplace.value.trim() : "",
       guests: form.attend.value === "Có" ? form.guests.value : "0", message: form.message.value.trim()
     };
     msg.className = "form-msg";
