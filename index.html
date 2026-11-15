@@ -244,6 +244,7 @@ ul{list-style:none}
 .spot-unit{color:var(--muted);font-size:.9rem;min-height:1em}
 .spot-card footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding-top:16px;border-top:1.5px solid var(--line);font-size:.78rem;color:var(--muted);text-align:right}
 .spot-card footer img{width:150px}
+.spot-card footer span{min-width:0}
 .spot-card footer b{color:var(--blue);white-space:nowrap}
 .spot-x{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:0;background:#e9f1ec;color:var(--ink);font-size:1rem;cursor:pointer}
 @media (max-width:560px){
@@ -257,7 +258,8 @@ ul{list-style:none}
   .wcard{padding:12px 13px;border-radius:18px;margin-bottom:10px}
   .wcard.xl .wmsg{font-size:1.1rem} .wcard.lg .wmsg{font-size:.95rem} .wcard.md .wmsg{font-size:.86rem}
   .spot{gap:4px;padding:8px} .spot-nav{width:34px;height:34px;font-size:1.3rem}
-  .spot-card footer img{width:110px}
+  .spot-card footer{flex-direction:column;align-items:flex-start;text-align:left;gap:10px}
+  .spot-card footer img{width:132px}
 }
 
 /* ---------- Màn hình rộng: giống bố cục thư mời ---------- */
