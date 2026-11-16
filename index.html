@@ -593,7 +593,7 @@ window.INVITE_CONFIG = {
     input.addEventListener("blur", hide);
     input.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
   }
-  var ROLE_NAMES = ["Thầy Cô đang công tác tại Khoa", "Thầy Cô nguyên là cán bộ, giảng viên của Khoa", "Sinh viên", "Học viên sau đại học", "Cựu người học", "Khách mời"];
+  var ROLE_NAMES = ["Thầy Cô đang công tác tại Khoa", "Thầy Cô đã từng công tác tại Khoa", "Sinh viên", "Học viên sau đại học", "Cựu người học", "Khách mời"];
   combo($("roleInput"), $("roleList"), ROLE_NAMES);
   combo($("majorInput"), $("majorList"), ["Khoa học thư viện", "Lưu trữ học", "Quản lý thông tin", "Quản trị văn phòng", "Thông tin học", "Thông tin - Thư viện"]);
 
@@ -721,7 +721,7 @@ window.INVITE_CONFIG = {
   /* ---------- Sổ lưu bút toàn màn hình ---------- */
   var ROLES = [
     ["Thầy Cô đang công tác tại Khoa", "Thầy Cô đang công tác", "#8dc63f"],
-    ["Thầy Cô nguyên là cán bộ, giảng viên của Khoa", "Thầy Cô nguyên cán bộ", "#f6c945"],
+    ["Thầy Cô đã từng công tác tại Khoa", "Thầy Cô nguyên cán bộ", "#f6c945"],
     ["Sinh viên", "Sinh viên", "#f79ab5"],
     ["Học viên sau đại học", "Học viên sau đại học", "#ffa35c"],
     ["Cựu người học", "Cựu người học", "#56c7e8"],
